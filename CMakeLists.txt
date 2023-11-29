@@ -171,11 +171,38 @@ add_executable(InstantMeshes MACOSX_BUNDLE
   src/dedge.h src/dedge.cpp
   ext/rply/rply.c
   ${EXTRA_SOURCE})
+add_library(InstantMeshesApi SHARED
+  api.h api.cpp
+  resources.cpp
+  src/glutil.h src/glutil.cpp
+  src/widgets.h src/widgets.cpp
+  src/aabb.h
+  src/main.cpp src/common.h
+  src/meshio.h src/meshio.cpp
+  src/normal.h src/normal.cpp
+  src/adjacency.h src/adjacency.cpp
+  src/meshstats.h src/meshstats.cpp
+  src/hierarchy.h src/hierarchy.cpp
+  src/extract.h src/extract.cpp
+  src/viewer.h src/viewer.cpp
+  src/field.h src/field.cpp
+  src/bvh.h src/bvh.cpp
+  src/subdivide.h src/subdivide.cpp
+  src/reorder.h src/reorder.cpp
+  src/serializer.h src/serializer.cpp
+  src/batch.h src/batch.cpp
+  src/smoothcurve.h src/smoothcurve.cpp
+  src/cleanup.h src/cleanup.cpp
+  src/dedge.h src/dedge.cpp
+  ext/rply/rply.c
+  ${EXTRA_SOURCE}) 
+target_compile_definitions(InstantMeshesApi PRIVATE -DInstantMesh_EXPORT)
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
 target_link_libraries(InstantMeshes tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
+target_link_libraries(InstantMeshesApi tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
 
-set_target_properties(InstantMeshes PROPERTIES OUTPUT_NAME "Instant Meshes")
+set_target_properties(InstantMeshes PROPERTIES OUTPUT_NAME "InstantMeshes")
 
 if (WIN32)
   # Quench some warnings on MSVC
