@@ -26,7 +26,10 @@ void batch_process(const std::string &input, const std::string &output,
                    int rosy, int posy, Float scale, int face_count,
                    int vertex_count, Float creaseAngle, bool extrinsic,
                    bool align_to_boundaries, int smooth_iter, int knn_points,
-                   bool pure_quad, bool deterministic) {
+                   bool pure_quad, bool deterministic,
+                   const std::vector<std::vector<int>> &input_faces,
+                   const std::vector<std::vector<float>> &input_verts,
+                   const std::vector<std::vector<int>> &input_features) {
     cout << endl;
     cout << "Running in batch mode:" << endl;
     cout << "   Input file             = " << input << endl;
@@ -53,8 +56,22 @@ void batch_process(const std::string &input, const std::string &output,
     BVH *bvh = nullptr;
     AdjacencyMatrix adj = nullptr;
 
-    /* Load the input mesh */
-    load_mesh_or_pointcloud(input, F, V, N);
+    if (input_verts.size() == 0) {
+        /* Load the input mesh */
+        load_mesh_or_pointcloud(input, F, V, N);
+    } else {
+        int face_num = input_faces.size(), vert_num = input_verts.size();
+        F.conservativeResize(3, face_num);
+        V.conservativeResize(3, vert_num);
+        for (int i = 0; i < face_num; ++i) {
+            for (int j = 0; j < 3; ++j)
+                F(j, i) = input_faces[i][j];
+        }
+        for (int i = 0; i < vert_num; ++i) {
+            for (int j = 0; j < 3; ++j)
+                V(j, i) = input_verts[i][j];
+        }
+    }
 
     bool pointcloud = F.size() == 0;
 
@@ -95,6 +112,11 @@ void batch_process(const std::string &input, const std::string &output,
     cout << "   Edge length            = " << scale << endl;
 
     MultiResolutionHierarchy mRes;
+    MatrixXu features(3, F.cols());
+    for (int i = 0; i < input_features.size(); ++i)
+        for (int j = 0; j < 3; ++j) {
+            features(j, i) = input_features[i][j];
+        }
 
     if (!pointcloud) {
         /* Subdivide the mesh if necessary */
@@ -105,7 +127,8 @@ void batch_process(const std::string &input, const std::string &output,
                     "(max input mesh edge length=" << stats.mMaximumEdgeLength
                  << "), subdividing .." << endl;
             build_dedge(F, V, V2E, E2E, boundary, nonManifold);
-            subdivide(F, V, V2E, E2E, boundary, nonManifold, std::min(scale/2, (Float) stats.mAverageEdgeLength*2), deterministic);
+            subdivide(F, V, V2E, E2E, features, boundary, nonManifold, std::min(scale/2, (Float) stats.mAverageEdgeLength*2), deterministic);
+            cout << V.cols() << endl;
         }
 
         /* Compute a directed edge data structure */
@@ -154,6 +177,30 @@ void batch_process(const std::string &input, const std::string &output,
                 }
             }
         }
+
+        for (uint32_t i = 0; i < mRes.F().cols(); ++i) {
+            for (int j = 0; j < 3; ++j) {
+                if (features(j, i) == 1) {
+                    uint32_t i0 = mRes.F()(j, i);
+                    uint32_t i1 = mRes.F()((j+1)%3, i);
+                    Vector3f p0 = mRes.V().col(i0), p1 = mRes.V().col(i1);
+                    Vector3f edge = p1-p0;
+                    if (mRes.CQw()[i0] > 0 || mRes.CQw()[i1] > 0 ||
+                        mRes.COw()[i0] > 0 || mRes.COw()[i1] > 0) {
+                        continue;
+                    }
+                    if (edge.squaredNorm() > 0) {
+                        edge.normalize();
+                        mRes.CO().col(i0) = p0;
+                        mRes.CO().col(i1) = p1;
+                        mRes.CQ().col(i0) = mRes.CQ().col(i1) = edge;
+                        mRes.CQw()[i0] = mRes.CQw()[i1] = mRes.COw()[i0] =
+                            mRes.COw()[i1] = 1.0f;
+                    }
+                }
+            }
+        }
+        
         mRes.propagateConstraints(rosy, posy);
     }
 

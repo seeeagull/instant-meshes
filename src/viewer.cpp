@@ -3129,9 +3129,10 @@ void Viewer::loadInput(std::string filename, Float creaseAngle, Float scale,
             cout << "Input mesh is too coarse for the desired output edge length "
                     "(max input mesh edge length=" << mMeshStats.mMaximumEdgeLength
                  << "), subdividing .." << endl;
+            MatrixXu features = MatrixXu::Zero(3, F.cols());
             build_dedge(F, V, V2E, E2E, mBoundaryVertices, mNonmanifoldVertices,
                         mProgress);
-            subdivide(F, V, V2E, E2E, mBoundaryVertices,
+            subdivide(F, V, V2E, E2E, features, mBoundaryVertices,
                       mNonmanifoldVertices, std::min(scale/2, (Float) mMeshStats.mAverageEdgeLength*2), mDeterministic, mProgress);
             mMeshStats = compute_mesh_stats(F, V, mDeterministic, mProgress);
         }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #ifndef EXPORT
 #  if defined(_MSC_VER) || defined(__CYGWIN__)
 #    ifdef InstantMesh_EXPORT
@@ -13,4 +15,7 @@
 #endif
 
 
-EXPORT int runInstantMeshes(int argc, char **argv);
+EXPORT int runInstantMeshes(const std::vector<std::vector<int>> &faces,
+                            const std::vector<std::vector<float>> &verts,
+                            const std::vector<std::vector<int>> &features,
+                            int argc, char **argv);

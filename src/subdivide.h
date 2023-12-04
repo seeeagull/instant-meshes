@@ -17,6 +17,6 @@
 #include "common.h"
 
 extern void subdivide(MatrixXu &F, MatrixXf &V, VectorXu &V2E, VectorXu &E2E,
-                      VectorXb &boundary, VectorXb &nonmanifold,
+                      MatrixXu &feature, VectorXb &boundary, VectorXb &nonmanifold,
                       Float maxLength, bool deterministic = false,
                       const ProgressCallback &progress = ProgressCallback());

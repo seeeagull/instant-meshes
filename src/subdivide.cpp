@@ -16,8 +16,8 @@
 #include "dedge.h"
 
 void subdivide(MatrixXu &F, MatrixXf &V, VectorXu &V2E, VectorXu &E2E,
-               VectorXb &boundary, VectorXb &nonmanifold, Float maxLength,
-               bool deterministic,
+               MatrixXu &features, VectorXb &boundary, VectorXb &nonmanifold,
+               Float maxLength, bool deterministic,
                const ProgressCallback &progress) {
     typedef std::pair<uint32_t, Float> Edge;
 
@@ -89,6 +89,14 @@ void subdivide(MatrixXu &F, MatrixXf &V, VectorXu &V2E, VectorXu &E2E,
         if ((V.col(v0) - V.col(v1)).squaredNorm() != edge.second)
             continue;
 
+        uint32_t feat_v1_v0p = features((e0+1)%3, f0), feat_v0p_v0 = features((e0+2)%3, f0), feat_v0_v1 = features(e0%3, f0);
+        uint32_t feat_v0_v1p = 0, feat_v1p_v1 = 0, feat_v1_v0 = 0;
+        if (!is_boundary) {
+            feat_v0_v1p = features((e1+1)%3, f1);
+            feat_v1p_v1 = features((e1+2)%3, f1);
+            feat_v1_v0 = features(e1%3, f1);
+        }
+
         uint32_t v1p = is_boundary ? INVALID : F((e1+2)%3, f1);
         uint32_t vn = nV++;
         nSplit++;
@@ -112,16 +120,21 @@ void subdivide(MatrixXu &F, MatrixXf &V, VectorXu &V2E, VectorXu &E2E,
 
         if (nF > F.cols()) {
             F.conservativeResize(F.rows(), std::max(nF, (uint32_t) F.cols() * 2));
+            features.conservativeResize(F.rows(), std::max(nF, (uint32_t) F.cols() * 2));
             E2E.conservativeResize(F.cols()*3);
         }
 
         /* Update F */
         F.col(f0) << vn, v0p, v0;
+        features.col(f0) << 0, feat_v0p_v0, feat_v0_v1;
         if (!is_boundary) {
             F.col(f1) << vn, v0, v1p;
             F.col(f2) << vn, v1p, v1;
+            features.col(f1) << feat_v1_v0, feat_v0_v1p, 0;
+            features.col(f2) << 0, feat_v1p_v1, feat_v1_v0;
         }
         F.col(f3) << vn, v1, v0p;
+        features.col(f3) << feat_v0_v1, feat_v1_v0p, 0;
 
         /* Update E2E */
         const uint32_t e0p = E2E[dedge_prev_3(e0)],
@@ -169,6 +182,7 @@ void subdivide(MatrixXu &F, MatrixXf &V, VectorXu &V2E, VectorXu &E2E,
         schedule(f3);
     }
     F.conservativeResize(F.rows(), nF);
+    features.conservativeResize(F.rows(), nF);
     V.conservativeResize(V.rows(), nV);
     V2E.conservativeResize(nV);
     boundary.conservativeResize(nV);
