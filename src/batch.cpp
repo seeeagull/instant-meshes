@@ -268,8 +268,8 @@ void batch_process(const std::string &input, const std::string &output,
         faces.resize(F_extr.cols());
         std::map<uint32_t, std::pair<uint32_t, std::map<uint32_t, uint32_t>>> irregular;
         size_t nIrregular = 0;
-        int face_cnt = 0;
         for (int f = 0; f < F_extr.cols(); ++f) {
+            faces[f] = std::vector<int>{};
             if (F_extr.rows() == 4) {
                 if (F_extr(2, f) == F_extr(3, f)) {
                     nIrregular++;
@@ -279,24 +279,24 @@ void batch_process(const std::string &input, const std::string &output,
                     continue;
                 }
             }
-            faces[face_cnt] = std::vector<int>{};
             for (int j = 0; j < F_extr.rows(); ++j)
-                faces[face_cnt].push_back(F_extr(j, f));
-            ++face_cnt;
+                faces[f].push_back(F_extr(j, f));
         }
         for (auto item : irregular) {
             auto face = item.second;
             uint32_t v = face.second.begin()->first, first = v, i = 0;
-            faces[face_cnt] = std::vector<int>{};
             while (true) {
-                faces[face_cnt].push_back(v);
-
+                faces[face.first].push_back(v);
                 v = face.second[v];
                 if (v == first || ++i == face.second.size())
                     break;
             }
-            ++face_cnt;
         }
+        cout << "V=" << O_extr.cols() << ", F=" << F_extr.cols();
+        if (irregular.size() > 0)
+            cout << "(" << irregular.size() << " irregular faces)";
+        cout << "." << endl;
+        cout.flush();
     }
     if (bvh)
         delete bvh;
