@@ -20,6 +20,6 @@ extern void batch_process(const std::string &input, const std::string &output,
                           int vertex_count, Float creaseAngle, bool extrinsic,
                           bool align_to_boundaries, int smooth_iter,
                           int knn_points, bool dominant, bool deterministic,
-                          const std::vector<std::vector<int>> &input_faces = std::vector<std::vector<int>>{},
-                          const std::vector<std::vector<float>> &input_verts = std::vector<std::vector<float>>{},
-                          const std::vector<std::vector<int>> &input_features = std::vector<std::vector<int>>{});
+                          std::vector<std::vector<int>> &faces,
+                          std::vector<std::vector<float>> &iverts,
+                          const std::vector<std::vector<int>> &features = std::vector<std::vector<int>>{});

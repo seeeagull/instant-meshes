@@ -27,9 +27,9 @@ void batch_process(const std::string &input, const std::string &output,
                    int vertex_count, Float creaseAngle, bool extrinsic,
                    bool align_to_boundaries, int smooth_iter, int knn_points,
                    bool pure_quad, bool deterministic,
-                   const std::vector<std::vector<int>> &input_faces,
-                   const std::vector<std::vector<float>> &input_verts,
-                   const std::vector<std::vector<int>> &input_features) {
+                   std::vector<std::vector<int>> &faces,
+                   std::vector<std::vector<float>> &verts,
+                   const std::vector<std::vector<int>> &features) {
     cout << endl;
     cout << "Running in batch mode:" << endl;
     cout << "   Input file             = " << input << endl;
@@ -56,20 +56,20 @@ void batch_process(const std::string &input, const std::string &output,
     BVH *bvh = nullptr;
     AdjacencyMatrix adj = nullptr;
 
-    if (input_verts.size() == 0) {
+    if (input.size() > 0) {
         /* Load the input mesh */
         load_mesh_or_pointcloud(input, F, V, N);
     } else {
-        int face_num = input_faces.size(), vert_num = input_verts.size();
+        int face_num = faces.size(), vert_num = verts.size();
         F.conservativeResize(3, face_num);
         V.conservativeResize(3, vert_num);
         for (int i = 0; i < face_num; ++i) {
             for (int j = 0; j < 3; ++j)
-                F(j, i) = input_faces[i][j];
+                F(j, i) = faces[i][j];
         }
         for (int i = 0; i < vert_num; ++i) {
             for (int j = 0; j < 3; ++j)
-                V(j, i) = input_verts[i][j];
+                V(j, i) = verts[i][j];
         }
     }
 
@@ -112,10 +112,10 @@ void batch_process(const std::string &input, const std::string &output,
     cout << "   Edge length            = " << scale << endl;
 
     MultiResolutionHierarchy mRes;
-    MatrixXu features(3, F.cols());
-    for (int i = 0; i < input_features.size(); ++i)
+    MatrixXu Feat(3, F.cols());
+    for (int i = 0; i < features.size(); ++i)
         for (int j = 0; j < 3; ++j) {
-            features(j, i) = input_features[i][j];
+            Feat(j, i) = features[i][j];
         }
 
     if (!pointcloud) {
@@ -127,7 +127,7 @@ void batch_process(const std::string &input, const std::string &output,
                     "(max input mesh edge length=" << stats.mMaximumEdgeLength
                  << "), subdividing .." << endl;
             build_dedge(F, V, V2E, E2E, boundary, nonManifold);
-            subdivide(F, V, V2E, E2E, features, boundary, nonManifold, std::min(scale/2, (Float) stats.mAverageEdgeLength*2), deterministic);
+            subdivide(F, V, V2E, E2E, Feat, boundary, nonManifold, std::min(scale/2, (Float) stats.mAverageEdgeLength*2), deterministic);
             cout << V.cols() << endl;
         }
 
@@ -180,7 +180,7 @@ void batch_process(const std::string &input, const std::string &output,
 
         for (uint32_t i = 0; i < mRes.F().cols(); ++i) {
             for (int j = 0; j < 3; ++j) {
-                if (features(j, i) == 1) {
+                if (Feat(j, i) == 1) {
                     uint32_t i0 = mRes.F()(j, i);
                     uint32_t i1 = mRes.F()((j+1)%3, i);
                     Vector3f p0 = mRes.V().col(i0), p1 = mRes.V().col(i1);
@@ -255,7 +255,49 @@ void batch_process(const std::string &input, const std::string &output,
             mRes.scale(), crease_out, true, pure_quad, bvh, smooth_iter);
     cout << "Extraction is done. (total time: " << timeString(timer.reset()) << ")" << endl;
 
-    write_mesh(output, F_extr, O_extr, MatrixXf(), Nf_extr);
+    if (output.size() > 0) {
+        write_mesh(output, F_extr, O_extr, MatrixXf(), Nf_extr);
+    } else {
+        verts.resize(O_extr.cols());
+        for (int i = 0; i < O_extr.cols(); ++i) {
+            verts[i] = std::vector<float>(3);
+            for (int j = 0; j < 3; ++j)
+                verts[i][j] = O_extr(j, i);
+        }
+
+        faces.resize(F_extr.cols());
+        std::map<uint32_t, std::pair<uint32_t, std::map<uint32_t, uint32_t>>> irregular;
+        size_t nIrregular = 0;
+        int face_cnt = 0;
+        for (int f = 0; f < F_extr.cols(); ++f) {
+            if (F_extr.rows() == 4) {
+                if (F_extr(2, f) == F_extr(3, f)) {
+                    nIrregular++;
+                    auto &value = irregular[F_extr(2, f)];
+                    value.first = f;
+                    value.second[F_extr(0, f)] = F_extr(1, f);
+                    continue;
+                }
+            }
+            faces[face_cnt] = std::vector<int>{};
+            for (int j = 0; j < F_extr.rows(); ++j)
+                faces[face_cnt].push_back(F_extr(j, f));
+            ++face_cnt;
+        }
+        for (auto item : irregular) {
+            auto face = item.second;
+            uint32_t v = face.second.begin()->first, first = v, i = 0;
+            faces[face_cnt] = std::vector<int>{};
+            while (true) {
+                faces[face_cnt].push_back(v);
+
+                v = face.second[v];
+                if (v == first || ++i == face.second.size())
+                    break;
+            }
+            ++face_cnt;
+        }
+    }
     if (bvh)
         delete bvh;
 }

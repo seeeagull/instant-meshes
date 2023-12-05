@@ -15,7 +15,7 @@
 #endif
 
 
-EXPORT int runInstantMeshes(const std::vector<std::vector<int>> &faces,
-                            const std::vector<std::vector<float>> &verts,
+EXPORT int runInstantMeshes(std::vector<std::vector<int>> &faces,
+                            std::vector<std::vector<float>> &verts,
                             const std::vector<std::vector<int>> &features,
                             int argc, char **argv);

@@ -174,10 +174,12 @@ int main(int argc, char **argv) {
 
     if (!batchOutput.empty() && args.size() == 1) {
         try {
+            std::vector<std::vector<int>> faces{};
+            std::vector<std::vector<float>> verts{};
             batch_process(args[0], batchOutput, rosy, posy, scale, face_count,
                           vertex_count, crease_angle, extrinsic,
                           align_to_boundaries, smooth_iter, knn_points,
-                          !dominant, deterministic);
+                          !dominant, deterministic, faces, verts);
             return 0;
         } catch (const std::exception &e) {
             cerr << "Caught runtime error : " << e.what() << endl;
