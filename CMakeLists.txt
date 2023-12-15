@@ -202,6 +202,10 @@ add_definitions(${NANOGUI_EXTRA_DEFS})
 target_link_libraries(InstantMeshes tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
 target_link_libraries(InstantMeshesApi tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
 
+add_library(tbb_from_instant_meshes INTERFACE)
+target_include_directories(tbb_from_instant_meshes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ext/tbb/include)
+target_link_libraries(tbb_from_instant_meshes INTERFACE tbb_static)
+
 set_target_properties(InstantMeshes PROPERTIES OUTPUT_NAME "InstantMeshes")
 
 if (WIN32)
