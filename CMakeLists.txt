@@ -206,6 +206,10 @@ add_library(tbb_from_instant_meshes INTERFACE)
 target_include_directories(tbb_from_instant_meshes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ext/tbb/include)
 target_link_libraries(tbb_from_instant_meshes INTERFACE tbb_static)
 
+add_library(nanogui_from_instant_meshes INTERFACE)
+target_include_directories(nanogui_from_instant_meshes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui/include)
+target_link_libraries(nanogui_from_instant_meshes INTERFACE nanogui ${NANOGUI_EXTRA_LIBS})
+
 set_target_properties(InstantMeshes PROPERTIES OUTPUT_NAME "InstantMeshes")
 
 if (WIN32)
