@@ -11,11 +11,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" U_CMAKE_BUILD_TYPE)
 
-if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui/ext/glfw")
-  message(FATAL_ERROR "The Instant Meshes dependency repositories (NanoGUI, GLFW, etc.) are missing! "
-    "You probably did not clone the project with --recursive. It is possible to recover "
-    "by calling \"git submodule update --init --recursive\"")
-endif()
+# if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui/ext/glfw")
+#   message(FATAL_ERROR "The Instant Meshes dependency repositories (NanoGUI, GLFW, etc.) are missing! "
+#     "You probably did not clone the project with --recursive. It is possible to recover "
+#     "by calling \"git submodule update --init --recursive\"")
+# endif()
 
 # Enable folders for projects in Visual Studio
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
@@ -62,11 +62,11 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # Build NanoGUI
-set(NANOGUI_BUILD_EXAMPLE OFF CACHE BOOL " " FORCE)
-set(NANOGUI_BUILD_SHARED  OFF CACHE BOOL " " FORCE)
-set(NANOGUI_BUILD_PYTHON  OFF CACHE BOOL " " FORCE)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui ext_build/nanogui)
-set_property(TARGET nanogui glfw glfw_objects bin2c PROPERTY FOLDER "dependencies")
+# set(NANOGUI_BUILD_EXAMPLE OFF CACHE BOOL " " FORCE)
+# set(NANOGUI_BUILD_SHARED  OFF CACHE BOOL " " FORCE)
+# set(NANOGUI_BUILD_PYTHON  OFF CACHE BOOL " " FORCE)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui ext_build/nanogui)
+# set_property(TARGET nanogui glfw glfw_objects bin2c PROPERTY FOLDER "dependencies")
 
 # Build TBB
 set(TBB_BUILD_STATIC ON CACHE BOOL " " FORCE)
@@ -94,10 +94,10 @@ endif()
 
 # Header file directories of dependency libraries
 include_directories(
-  # NanoGUI
-  ${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui/include
-  # NanoGUI dependencies (Eigen, GLFW, NanoVG, GLAD?)
-  ${NANOGUI_EXTRA_INCS}
+  # # NanoGUI
+  # ${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui/include
+  # # NanoGUI dependencies (Eigen, GLFW, NanoVG, GLAD?)
+  # ${NANOGUI_EXTRA_INCS}
   # Intel Thread Building Blocks
   ${CMAKE_CURRENT_SOURCE_DIR}/ext/tbb/include
   # Disjoint set data structure
@@ -115,25 +115,25 @@ include_directories(
 )
 
 # Run bin2c on resource files
-set(PNG_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/comb.png
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/delete_stroke.png
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/loadmesh.png
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/scare.png
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/sing_dir.png
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/sing_pos.png
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/instantmeshes.png)
-file(GLOB FRAG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.frag")
-file(GLOB VERT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.vert")
-file(GLOB GEO_FILES  "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.geo")
-set(IM_RESOURCES ${PNG_FILES} ${FRAG_FILES} ${VERT_FILES} ${GEO_FILES})
+# set(PNG_FILES
+#   ${CMAKE_CURRENT_SOURCE_DIR}/resources/comb.png
+#   ${CMAKE_CURRENT_SOURCE_DIR}/resources/delete_stroke.png
+#   ${CMAKE_CURRENT_SOURCE_DIR}/resources/loadmesh.png
+#   ${CMAKE_CURRENT_SOURCE_DIR}/resources/scare.png
+#   ${CMAKE_CURRENT_SOURCE_DIR}/resources/sing_dir.png
+#   ${CMAKE_CURRENT_SOURCE_DIR}/resources/sing_pos.png
+#   ${CMAKE_CURRENT_SOURCE_DIR}/resources/instantmeshes.png)
+# file(GLOB FRAG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.frag")
+# file(GLOB VERT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.vert")
+# file(GLOB GEO_FILES  "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.geo")
+# set(IM_RESOURCES ${PNG_FILES} ${FRAG_FILES} ${VERT_FILES} ${GEO_FILES})
 
-add_custom_command(
-  OUTPUT resources.cpp
-  COMMAND bin2c ARGS resources.cpp resources.h ${IM_RESOURCES}
-  DEPENDS bin2c ${IM_RESOURCES}
-  COMMENT "Running bin2c"
-  PRE_BUILD VERBATIM)
+# add_custom_command(
+#   OUTPUT resources.cpp
+#   COMMAND bin2c ARGS resources.cpp resources.h ${IM_RESOURCES}
+#   DEPENDS bin2c ${IM_RESOURCES}
+#   COMMENT "Running bin2c"
+#   PRE_BUILD VERBATIM)
 
 if (INSTANT_MESHES_DEV_MODE)
   add_definitions(-DDEV_MODE)
@@ -147,44 +147,42 @@ elseif(WIN32)
   set(EXTRA_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources/im.rc")
 endif()
 
-add_executable(InstantMeshes MACOSX_BUNDLE
-  resources.cpp
-  src/glutil.h src/glutil.cpp
-  src/widgets.h src/widgets.cpp
-  src/aabb.h
-  src/main.cpp src/common.h
-  src/meshio.h src/meshio.cpp
-  src/normal.h src/normal.cpp
-  src/adjacency.h src/adjacency.cpp
-  src/meshstats.h src/meshstats.cpp
-  src/hierarchy.h src/hierarchy.cpp
-  src/extract.h src/extract.cpp
-  src/viewer.h src/viewer.cpp
-  src/field.h src/field.cpp
-  src/bvh.h src/bvh.cpp
-  src/subdivide.h src/subdivide.cpp
-  src/reorder.h src/reorder.cpp
-  src/serializer.h src/serializer.cpp
-  src/batch.h src/batch.cpp
-  src/smoothcurve.h src/smoothcurve.cpp
-  src/cleanup.h src/cleanup.cpp
-  src/dedge.h src/dedge.cpp
-  ext/rply/rply.c
-  ${EXTRA_SOURCE})
+find_package(Eigen3 REQUIRED)
+
+# add_executable(InstantMeshes MACOSX_BUNDLE
+#   resources.cpp
+#   src/glutil.h src/glutil.cpp
+#   src/widgets.h src/widgets.cpp
+#   src/aabb.h
+#   src/main.cpp src/common.h
+#   src/meshio.h src/meshio.cpp
+#   src/normal.h src/normal.cpp
+#   src/adjacency.h src/adjacency.cpp
+#   src/meshstats.h src/meshstats.cpp
+#   src/hierarchy.h src/hierarchy.cpp
+#   src/extract.h src/extract.cpp
+#   src/viewer.h src/viewer.cpp
+#   src/field.h src/field.cpp
+#   src/bvh.h src/bvh.cpp
+#   src/subdivide.h src/subdivide.cpp
+#   src/reorder.h src/reorder.cpp
+#   src/serializer.h src/serializer.cpp
+#   src/batch.h src/batch.cpp
+#   src/smoothcurve.h src/smoothcurve.cpp
+#   src/cleanup.h src/cleanup.cpp
+#   src/dedge.h src/dedge.cpp
+#   ext/rply/rply.c
+#   ${EXTRA_SOURCE})
 add_library(InstantMeshesApi SHARED
   api.h api.cpp
-  resources.cpp
-  src/glutil.h src/glutil.cpp
-  src/widgets.h src/widgets.cpp
   src/aabb.h
-  src/main.cpp src/common.h
+  src/common.h
   src/meshio.h src/meshio.cpp
   src/normal.h src/normal.cpp
   src/adjacency.h src/adjacency.cpp
   src/meshstats.h src/meshstats.cpp
   src/hierarchy.h src/hierarchy.cpp
   src/extract.h src/extract.cpp
-  src/viewer.h src/viewer.cpp
   src/field.h src/field.cpp
   src/bvh.h src/bvh.cpp
   src/subdivide.h src/subdivide.cpp
@@ -198,19 +196,19 @@ add_library(InstantMeshesApi SHARED
   ${EXTRA_SOURCE}) 
 target_compile_definitions(InstantMeshesApi PRIVATE -DInstantMesh_EXPORT)
 
-add_definitions(${NANOGUI_EXTRA_DEFS})
-target_link_libraries(InstantMeshes tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
-target_link_libraries(InstantMeshesApi tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
+# add_definitions(${NANOGUI_EXTRA_DEFS})
+# target_link_libraries(InstantMeshes tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
+target_link_libraries(InstantMeshesApi tbb_static Eigen3::Eigen)# nanogui ${NANOGUI_EXTRA_LIBS})
 
 add_library(tbb_from_instant_meshes INTERFACE)
 target_include_directories(tbb_from_instant_meshes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ext/tbb/include)
 target_link_libraries(tbb_from_instant_meshes INTERFACE tbb_static)
 
-add_library(nanogui_from_instant_meshes INTERFACE)
-target_include_directories(nanogui_from_instant_meshes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui/include)
-target_link_libraries(nanogui_from_instant_meshes INTERFACE nanogui ${NANOGUI_EXTRA_LIBS})
+# add_library(nanogui_from_instant_meshes INTERFACE)
+# target_include_directories(nanogui_from_instant_meshes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ext/nanogui/include)
+# target_link_libraries(nanogui_from_instant_meshes INTERFACE nanogui ${NANOGUI_EXTRA_LIBS})
 
-set_target_properties(InstantMeshes PROPERTIES OUTPUT_NAME "InstantMeshes")
+# set_target_properties(InstantMeshes PROPERTIES OUTPUT_NAME "InstantMeshes")
 
 if (WIN32)
   # Quench some warnings on MSVC
@@ -219,17 +217,17 @@ if (WIN32)
   endif()
 elseif (APPLE)
   # Build an application bundle on OSX
-  set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Instant Meshes")
-  set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_BUNDLE_GUI_IDENTIFIER "com.im.InstantMeshes")
-  set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_ICON_FILE im.icns)
-  set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/resources/MacOSXBundleInfo.plist.in)
-  set_source_files_properties(resources/im.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+  # set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Instant Meshes")
+  # set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_BUNDLE_GUI_IDENTIFIER "com.im.InstantMeshes")
+  # set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_ICON_FILE im.icns)
+  # set_target_properties(InstantMeshes PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/resources/MacOSXBundleInfo.plist.in)
+  # set_source_files_properties(resources/im.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 else()
   # Insulate from a few types of ABI changes by statically linking against libgcc and libstdc++
-  set_target_properties(InstantMeshes PROPERTIES LINK_FLAGS "-static-libgcc")
+  # set_target_properties(InstantMeshes PROPERTIES LINK_FLAGS "-static-libgcc")
   #set_target_properties(InstantMeshes PROPERTIES LINK_FLAGS "-static-libgcc -static-libstdc++")
 endif()
 
-if (UNIX AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEBUG)
-  add_custom_command(TARGET InstantMeshes POST_BUILD COMMAND strip $<TARGET_FILE:InstantMeshes>)
-endif()
+# if (UNIX AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEBUG)
+#   add_custom_command(TARGET InstantMeshes POST_BUILD COMMAND strip $<TARGET_FILE:InstantMeshes>)
+# endif()

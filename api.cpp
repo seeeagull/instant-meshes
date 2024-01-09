@@ -1,18 +1,14 @@
 #include "src/batch.h"
-#include "src/viewer.h"
 #include "src/serializer.h"
 #include "api.h"
 #include <thread>
 #include <cstdlib>
 
-/* Force usage of discrete GPU on laptops */
-NANOGUI_FORCE_DISCRETE_GPU();
-
+int nprocs = -1;
 int runInstantMeshes(std::vector<std::vector<int>> &faces,
                      std::vector<std::vector<float>> &verts,
                      const std::vector<std::vector<int>> &features,
                      int argc, char **argv) {
-    int nprocs = -1;
     bool extrinsic = true, dominant = false, align_to_boundaries = false;
     bool fullscreen = false, help = false, deterministic = false, compat = false;
     int rosy = 4, posy = 4, face_count = -1, vertex_count = -1;
