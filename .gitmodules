@@ -6,7 +6,7 @@
 	url = https://github.com/wjakob/dset
 [submodule "ext/tbb"]
 	path = ext/tbb
-	url = https://github.com/wjakob/tbb
+	url = https://github.com/seeeagull/tbb
 [submodule "ext/pss"]
 	path = ext/pss
 	url = https://github.com/wjakob/pss
